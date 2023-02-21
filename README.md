@@ -8,13 +8,11 @@ This tool allows you to transfer stickers from VK to Telegram. It uses VK API to
 ## Installation
 
 ```bash
-git clone %URL%
-cd %REPO%
+git clone https://github.com/extroot/tg_vkstickers
+cd tg_vkstickers
 
 # Install dependencies
 pip install -r requirements.txt
-
-python main.py --help
 ```
 
 ## Usage
