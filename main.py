@@ -81,7 +81,7 @@ class Telegram:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Transfer sticker pack from VK to Telegram')
     parser.add_argument('-env', action='store_true', help='load .env file', default=False)
     parser.add_argument('-pack_id', type=int, help='Pack ID to move', required=True)
     parser.add_argument('-interval', type=float, help='interval between messages to stickers bot', default=1.0)

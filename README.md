@@ -24,6 +24,7 @@ options:
   -pack_id PACK_ID      Pack ID to move
   -interval INTERVAL    interval between messages to stickers bot
   -suffix SUFFIX        suffix for sticker pack name
+  -prefix PREFIX        prefix for sticker pack link
   -tg_api_id TI, --ti TI
                         Telegram API ID
   -tg_api_hash TH, --th TH
