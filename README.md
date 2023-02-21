@@ -32,7 +32,6 @@ options:
                         Telegram session name
   -vk_token VK, --vk VK
                         VK token
-
 ```
 
 

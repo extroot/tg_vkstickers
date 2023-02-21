@@ -36,7 +36,7 @@ class Telegram:
         self.vk_api_ = vk_api.VkApi(token=vk_token)
         self.vk_session = self.vk_api_.get_api()
 
-    def create_pack(self, pack_id: int, suffix: str = 'By @Extroot'):
+    def create_pack(self, pack_id: int, suffix: str = '', link_prefix: str = 'pack'):
         self.__check_telegram()
 
         pack_name = self.__get_pack_name(pack_id)
@@ -53,7 +53,7 @@ class Telegram:
 
         self.client.send_message('Stickers', '/publish')
         self.client.send_message('Stickers', '/skip')
-        self.client.send_message('Stickers', f'Extroot_{pack_name.replace("-", "_")}')
+        self.client.send_message('Stickers', f'{link_prefix}_{pack_name.replace("-", "_")}')
 
     def __get_links(self, pack_id: int) -> list[str]:
         self.__check_vk()
@@ -86,6 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('-pack_id', type=int, help='Pack ID to move', required=True)
     parser.add_argument('-interval', type=float, help='interval between messages to stickers bot', default=1.0)
     parser.add_argument('-suffix', type=str, help='suffix for sticker pack name')
+    parser.add_argument('-prefix', type=str, help='prefix for sticker pack link')
 
     parser.add_argument('-tg_api_id', '--ti', type=int, help='Telegram API ID')
     parser.add_argument('-tg_api_hash', '--th', type=str, help='Telegram API HASH')
@@ -106,7 +107,8 @@ if __name__ == '__main__':
         VK_TOKEN = args.vk
         TG_API_ID = args.ti
         TG_API_HASH = args.th
-    SUFFIX = args.suffix or 'By @Extroot'
+    SUFFIX = args.suffix or 'via tg_vkstickers'
+    PREFIX = args.prefix or 'pack'
     INTERVAL = args.interval or 1.0
     EMOJI_INTERVAL = args.emoji_interval or 0.1
 
@@ -115,4 +117,4 @@ if __name__ == '__main__':
     telegram = Telegram()
     telegram.init_vk(VK_TOKEN)
     telegram.init_telegram(TG_API_ID, TG_API_HASH)
-    telegram.create_pack(pack_id_inp)
+    telegram.create_pack(pack_id_inp, SUFFIX, PREFIX)
