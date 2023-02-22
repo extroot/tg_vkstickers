@@ -13,6 +13,7 @@ class Telegram:
     vk_session: vk_api.vk_api.VkApiMethod
     interval: float = 1.0
     emoji_interval: float = 0.1
+    saved_packs: dict[int: tuple[str, list[str]]] = dict()
 
     def __init__(self,
                  vk_token: str = None,
@@ -41,6 +42,7 @@ class Telegram:
 
         pack_name = self.__get_pack_name(pack_id)
         links = self.__get_links(pack_id)
+        # print(f'Proceeding {pack_name} with {len(links)}')
 
         self.client.send_message('Stickers', '/newpack')
         self.client.send_message('Stickers', f'{pack_name} {suffix}')
@@ -55,21 +57,20 @@ class Telegram:
         self.client.send_message('Stickers', '/skip')
         self.client.send_message('Stickers', f'{link_prefix}_{pack_name.replace("-", "_")}')
 
-    def __get_links(self, pack_id: int) -> list[str]:
+    def __proceed_vk_pack(self, pack_id: int) -> tuple[str, list[str]]:
         self.__check_vk()
+        if pack_id in self.saved_packs:
+            return self.saved_packs[pack_id]
 
-        sticker_links: list[str] = []
         data = self.vk_session.store.getProducts(type="stickers", product_ids=pack_id, extended=1)['items'][0]
+        out = (data['title'], [sticker['images'][4]['url'] for sticker in data['stickers']])
+        return out
 
-        for sticker in data['stickers']:
-            sticker_links.append(sticker['images'][4]['url'])
-        return sticker_links
+    def __get_links(self, pack_id: int) -> list[str]:
+        return self.__proceed_vk_pack(pack_id)[1]
 
     def __get_pack_name(self, pack_id: int) -> str:
-        self.__check_vk()
-
-        data = self.vk_session.store.getProducts(type="stickers", product_ids=pack_id, extended=1)['items'][0]
-        return data['title']
+        return self.__proceed_vk_pack(pack_id)[0]
 
     def __check_vk(self):
         if not self.vk_session:
@@ -84,9 +85,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Transfer sticker pack from VK to Telegram')
     parser.add_argument('-env', action='store_true', help='load .env file', default=False)
     parser.add_argument('-pack_id', type=int, help='Pack ID to move', required=True)
-    parser.add_argument('-interval', type=float, help='interval between messages to stickers bot', default=1.0)
-    parser.add_argument('-suffix', type=str, help='suffix for sticker pack name')
-    parser.add_argument('-prefix', type=str, help='prefix for sticker pack link')
+    parser.add_argument('-i', '--interval', type=float, help='interval between messages to stickers bot', default=1.0)
+    parser.add_argument('-ei', '--emoji_interval', type=float,
+                        help='Interval between image and emoji sent to stickers bot', default=0.1)
+    parser.add_argument('-suffix', type=str, help='suffix for sticker pack name', default='via tg_stickers')
+    parser.add_argument('-prefix', type=str, help='prefix for sticker pack link', default='pack')
 
     parser.add_argument('-tg_api_id', '--ti', type=int, help='Telegram API ID')
     parser.add_argument('-tg_api_hash', '--th', type=str, help='Telegram API HASH')
@@ -94,6 +97,12 @@ if __name__ == '__main__':
     parser.add_argument('-vk_token', '--vk', type=str, help='VK token')
 
     args = parser.parse_args()
+    SUFFIX = args.suffix
+    PREFIX = args.prefix
+    INTERVAL = args.interval or 1.0
+    EMOJI_INTERVAL = args.emoji_interval or 0.1
+    pack_id_inp = args.pack_id
+
     if args.env:
         load_dotenv()
         VK_TOKEN = os.getenv("VK_TOKEN")
@@ -107,12 +116,6 @@ if __name__ == '__main__':
         VK_TOKEN = args.vk
         TG_API_ID = args.ti
         TG_API_HASH = args.th
-    SUFFIX = args.suffix or 'via tg_vkstickers'
-    PREFIX = args.prefix or 'pack'
-    INTERVAL = args.interval or 1.0
-    EMOJI_INTERVAL = args.emoji_interval or 0.1
-
-    pack_id_inp = args.pack_id
 
     telegram = Telegram()
     telegram.init_vk(VK_TOKEN)
