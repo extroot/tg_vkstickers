@@ -11,19 +11,30 @@ class Telegram:
     client: TelegramClient
     vk_api_: vk_api.VkApi
     vk_session: vk_api.vk_api.VkApiMethod
-    interval: float = 1.0
+    interval: float
     emoji_interval: float = 0.1
+    suffix: str
+    prefix: str
+    link_prefix: str
     saved_packs: dict[int: tuple[str, list[str]]] = dict()
 
     def __init__(self,
                  vk_token: str = None,
                  tg_api_id: int = None, tg_api_hash: str = None,
-                 session_name: str = 'session_name'
+                 session_name: str = 'session_name',
+                 suffix: str = None,
+                 prefix: str = None,
+                 interval: float = 1.0,
+                 emoji_interval: float = 0.1,
                  ):
         if vk_token:
             self.init_vk(vk_token)
         if tg_api_id and tg_api_hash:
             self.init_telegram(tg_api_id, tg_api_hash, session_name)
+        self.suffix = suffix or ''
+        self.prefix = prefix or ''
+        self.interval = interval
+        self.emoji_interval = emoji_interval
 
     def __del__(self):
         if self.client:
@@ -37,7 +48,7 @@ class Telegram:
         self.vk_api_ = vk_api.VkApi(token=vk_token)
         self.vk_session = self.vk_api_.get_api()
 
-    def create_pack(self, pack_id: int, suffix: str = '', link_prefix: str = 'pack'):
+    def create_pack(self, pack_id: int):
         self.__check_telegram()
 
         pack_name = self.__get_pack_name(pack_id)
@@ -45,7 +56,7 @@ class Telegram:
         # print(f'Proceeding {pack_name} with {len(links)}')
 
         self.client.send_message('Stickers', '/newpack')
-        self.client.send_message('Stickers', f'{pack_name} {suffix}')
+        self.client.send_message('Stickers', f'{pack_name} {self.suffix}')
 
         for link in links:
             self.client.send_file('Stickers', link)
@@ -55,7 +66,13 @@ class Telegram:
 
         self.client.send_message('Stickers', '/publish')
         self.client.send_message('Stickers', '/skip')
-        self.client.send_message('Stickers', f'{link_prefix}_{pack_name.replace("-", "_")}')
+        self.client.send_message('Stickers', f'{self.prefix}_{pack_name.replace("-", "_")}')
+
+    def create_packs(self, pack_ids: list[int]):
+        """
+        TODO: Transfer multiple sticker packs with pack_ids given.
+        """
+        pass
 
     def __proceed_vk_pack(self, pack_id: int) -> tuple[str, list[str]]:
         self.__check_vk()
@@ -117,7 +134,12 @@ if __name__ == '__main__':
         TG_API_ID = args.ti
         TG_API_HASH = args.th
 
-    telegram = Telegram()
+    telegram = Telegram(
+        suffix=SUFFIX,
+        prefix=PREFIX,
+        interval=INTERVAL,
+        emoji_interval=EMOJI_INTERVAL
+    )
     telegram.init_vk(VK_TOKEN)
     telegram.init_telegram(TG_API_ID, TG_API_HASH)
-    telegram.create_pack(pack_id_inp, SUFFIX, PREFIX)
+    telegram.create_pack(pack_id_inp)
